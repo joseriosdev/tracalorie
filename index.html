@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <title>Tra-Calorie</title>
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper green">
+      <div class="container">
+        <a href="#" class="brand-logo center">TraCalorie</a>
+        <ul class="right">
+          <li><a href="" class="clear-btn red btn lighten-2">Clear All</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <br>
+
+  <main class="container">
+    <section class="card">
+      <div class="card-content">
+        <span class="card-title">Add Meal / Food Item</span>
+        <form class="col">
+          <div class="row">
+            <div class="input-field col s6">
+              <input type="text" placeholder="Add Item" id="item-name">
+              <label for="item-name">Meal</label>
+            </div>
+            <div class="input-field col s6">
+              <input type="text" placeholder="Add Calories" id="item-calories">
+              <label for="item-calories">Calories</label>
+            </div>
+            <button class="add-btn blue btn darken-2"><i class="fa fa-plus"></i> Add Meal</button>
+            <button class="update-btn orange btn darken-1"><i class="fa fa-pencil-square-o"></i> Update Meal</button>
+            <button class="add-btn red btn"><i class="fa fa-remove"></i> Delete Meal</button>
+            <button class="add-btn grey btn pull-right"><i class="fa fa-chevron-circle-left"></i> Back</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <h3 class="center">Total Calories: <span class="total-calories">0</span></h3>
+
+    <ul id="item-list" class="collection">
+      <li class="collection-item" id="item-0">
+        <strong>Steak: </strong> <em>120 Calories</em> <a href="#" class="secondary-content"><i class="fa fa-pencil"></i></a>
+      </li>
+    </ul>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
