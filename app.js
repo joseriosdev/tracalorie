@@ -1,8 +1,55 @@
-// Controllers are esentially classes
+// Controllers are esentially classes / prototypes
 
 // --------------- Storage Controller ---------------
 const StorageCtrl = (function() {
+  return {
+    storeItem: function(item) {
+      let items;
+      
+      if(localStorage.getItem('items') === null) {
+        items = [];
+        items.push(item);
+        localStorage.setItem('items', JSON.stringify(items));
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+        items.push(item);
+        localStorage.setItem('items', JSON.stringify(items));
+      }
+    },
+    getItemsFromStorage: function() {
+      let items;
 
+      if(localStorage.getItem('items') === null) {
+        items = [];
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+      }
+      return items;
+    },
+    updateItemStorage: function(updatedItem) {
+      let items = JSON.parse(localStorage.getItem('items'));
+
+      items.forEach((item, i) => {
+        if(updatedItem.id === item.id) {
+          item.splice(i, 1, updatedItem);
+        }
+      });
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+    deleteItemFromStorage: function(id) {
+      let items = JSON.parse(localStorage.getItem('items'));
+
+      items.forEach((item, i) => {
+        if(id === item.id) {
+          item.splice(i, 1);
+        }
+      });
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+    clearItemsFromStorage: function() {
+      localStorage.removeItem('items');
+    }
+  }
 })();
 
 // --------------- Item Controller ---------------
@@ -14,9 +61,7 @@ const ItemCtrl = (function() {
   }
 
   const data = {
-    items: [
-      // { id: 0, name: 'Carrot', calories: 50 }
-    ],
+    items: StorageCtrl.getItemsFromStorage(),
     currentItem: null,
     totalCalories: 0
   };
@@ -59,6 +104,14 @@ const ItemCtrl = (function() {
       
       return found;
     },
+    deleteItem: function(id) {
+      const ids = data.items.map(item => item.id);
+      const index = ids.indexOf(id);
+      data.items.splice(index, 1);
+    },
+    clearAllItems: function() {
+      data.items = [];
+    },
     setCurrentItem: function(item) {
       data.currentItem = item;
     },
@@ -82,7 +135,6 @@ const ItemCtrl = (function() {
   }
 })();
 
-
 // --------------- UI Controller ---------------
 const UICtrl = (function() {
   const UISelectors = {
@@ -94,7 +146,8 @@ const UICtrl = (function() {
     itemNameInput: '#item-name',
     itemCaloriesInput: '#item-calories',
     totalCalories: '.total-calories',
-    listItems: '#item-list li'
+    listItems: '#item-list li',
+    clearBtn: '.clear-btn'
   };
   
   return {
@@ -136,9 +189,22 @@ const UICtrl = (function() {
         }
       });
     },
+    deleteListItem: function(id) {
+      const itemID = `#item-${id}`;
+      const item = document.querySelector(itemID);
+      item.remove();
+    },
     clearInput: function() {
       document.querySelector(UISelectors.itemNameInput).value = '';
       document.querySelector(UISelectors.itemCaloriesInput).value = '';
+    },
+    removeItems: function() {
+      let listItems = document.querySelectorAll(UISelectors.listItems);
+      listItems = Array.from(listItems);
+
+      listItems.forEach(item => {
+        item.remove();
+      });
     },
     addItemToForm: function() {
       document.querySelector(UISelectors.itemNameInput).value = ItemCtrl.getCurrentItem().name;
@@ -151,7 +217,11 @@ const UICtrl = (function() {
     showTotalCalories: function(totalCalories) {
       document.querySelector(UISelectors.totalCalories).textContent = totalCalories;
     },
-    clearEditState: function() {
+    clearEditState: function(evt) {
+      try {
+        evt.preventDefault();
+      } catch(err) { }
+
       UICtrl.clearInput();
 
       document.querySelector(UISelectors.updateBtn).style.display = 'none';
@@ -171,9 +241,8 @@ const UICtrl = (function() {
   }
 })();
 
-
 // --------------- App Controller ---------------
-const AppCtrl = (function(ItemCtrl, UICtrl) {
+const AppCtrl = (function(ItemCtrl, StorageCtrl, UICtrl) {
   const loadEvtListeners = function() {
     const UISelectors = UICtrl.getSelectors();
 
@@ -186,6 +255,9 @@ const AppCtrl = (function(ItemCtrl, UICtrl) {
     });
     document.querySelector(UISelectors.itemList).addEventListener('click', itemEditClick);
     document.querySelector(UISelectors.updateBtn).addEventListener('click', itemUpdateSubmit);
+    document.querySelector(UISelectors.deleteBtn).addEventListener('click', itemDeleteSubmit);
+    document.querySelector(UISelectors.clearBtn).addEventListener('click', clearAllItemsClick);
+    document.querySelector(UISelectors.backBtn).addEventListener('click', UICtrl.clearEditState);
   }
 
   const itemAddSubmit = function(evt) {
@@ -199,7 +271,8 @@ const AppCtrl = (function(ItemCtrl, UICtrl) {
 
       const totalCalories = ItemCtrl.getTotalCalories();
       UICtrl.showTotalCalories(totalCalories);
-
+      StorageCtrl.storeItem(newItem);
+      
       UICtrl.clearInput();
     }
   }
@@ -228,7 +301,34 @@ const AppCtrl = (function(ItemCtrl, UICtrl) {
     
     const totalCalories = ItemCtrl.getTotalCalories();
     UICtrl.showTotalCalories(totalCalories);
+    StorageCtrl.updateItemStorage(updatedItem);
     UICtrl.clearEditState();
+  }
+
+  const itemDeleteSubmit = function(evt) {
+    evt.preventDefault();
+
+    const currentItem = ItemCtrl.getCurrentItem();
+
+    ItemCtrl.deleteItem(currentItem.id);
+    UICtrl.deleteListItem(currentItem.id);
+
+    const totalCalories = ItemCtrl.getTotalCalories();
+    UICtrl.showTotalCalories(totalCalories);
+    StorageCtrl.deleteItemFromStorage(currentItem.id);
+    UICtrl.clearEditState();
+  }
+
+  const clearAllItemsClick = function(evt) {
+    evt.preventDefault();
+
+    const totalCalories = ItemCtrl.getTotalCalories();
+
+    UICtrl.showTotalCalories(totalCalories);
+    ItemCtrl.clearAllItems();
+    UICtrl.removeItems();
+    StorageCtrl.clearItemsFromStorage();
+    UICtrl.hideList();
   }
 
   return {
@@ -248,8 +348,7 @@ const AppCtrl = (function(ItemCtrl, UICtrl) {
       loadEvtListeners();
     }
   }  
-})(ItemCtrl, UICtrl);
-
+})(ItemCtrl, StorageCtrl, UICtrl);
 
 // App Init
 AppCtrl.init();
